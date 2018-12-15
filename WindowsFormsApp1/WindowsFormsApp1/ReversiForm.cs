@@ -8,12 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace WindowsFormsApp1
+namespace ReversiGame
 {
     public partial class ReversiGame : Form
     {
         BoardSpace[][] board;
-        const int spaceSize = 40;
+        public const int spaceSize = 80;
         const int tokenSize = 30;
         const int boardX = 200;
         const int boardY = 200;
@@ -30,10 +30,11 @@ namespace WindowsFormsApp1
                 board[i] = new BoardSpace[3];
                 for (int j = 0; j < board[i].Length; j++)
                 {
-                    board[i][j] = new BoardSpace
+                    board[i][j] = new BoardSpace(spaceSize)
                     {
-                        Location = new Point(boardX, boardY)
+                        Location = new Point(boardX + i * spaceSize, boardY + j * spaceSize)
                     };
+                    this.Controls.Add(board[i][j]);
                 }
             }
             this.Invalidate();

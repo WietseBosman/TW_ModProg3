@@ -8,18 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace WindowsFormsApp1
+namespace ReversiGame
 {
     public partial class BoardSpace : UserControl
     {
-        public BoardSpace()
+        public BoardSpace(int size)
         {
             InitializeComponent();
+            this.Size = new Size(size, size);
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
+        
     }
 }
