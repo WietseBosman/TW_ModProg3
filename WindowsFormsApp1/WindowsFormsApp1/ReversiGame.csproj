@@ -60,6 +60,9 @@
     <Compile Include="BoardSpace.Designer.cs">
       <DependentUpon>BoardSpace.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="BoardSpace.resx">
+      <DependentUpon>BoardSpace.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ReversiForm.resx">
       <DependentUpon>ReversiForm.cs</DependentUpon>
     </EmbeddedResource>

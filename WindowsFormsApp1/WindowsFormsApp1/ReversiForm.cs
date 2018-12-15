@@ -12,14 +12,30 @@ namespace WindowsFormsApp1
 {
     public partial class ReversiGame : Form
     {
-
-
+        BoardSpace[][] board;
+        const int spaceSize = 40;
+        const int tokenSize = 30;
+        const int boardX = 200;
+        const int boardY = 200;
 
         public ReversiGame()
         {
             InitializeComponent();
 
             this.Paint += draw;
+            board = new BoardSpace[3][];
+
+            for (int i = 0; i < board.Length; i++)
+            {
+                board[i] = new BoardSpace[3];
+                for (int j = 0; j < board[i].Length; j++)
+                {
+                    board[i][j] = new BoardSpace();
+                    board[1][j].Location = new Point(boardX, boardY);
+                }
+            }
+                
+
         }
 
         //responsible for drawing the board, score and gamestate.
