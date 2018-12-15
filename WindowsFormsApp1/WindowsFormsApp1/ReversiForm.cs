@@ -30,10 +30,13 @@ namespace WindowsFormsApp1
                 board[i] = new BoardSpace[3];
                 for (int j = 0; j < board[i].Length; j++)
                 {
-                    board[i][j] = new BoardSpace();
-                    board[1][j].Location = new Point(boardX, boardY);
+                    board[i][j] = new BoardSpace
+                    {
+                        Location = new Point(boardX, boardY)
+                    };
                 }
             }
+            this.Invalidate();
                 
 
         }
@@ -58,6 +61,18 @@ namespace WindowsFormsApp1
 
         //resets the board- and gamestate and resizes the board
         private void newGame()
+        {
+
+        }
+
+        //checks whether the current player can make a move onto this space
+        private void checkMove()
+        {
+
+        }
+
+        //handles a player move
+        private void makeMove()
         {
 
         }
