@@ -34,6 +34,7 @@
             this.textBoxSizeY = new System.Windows.Forms.TextBox();
             this.labelSizeX = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
+            this.buttonUndo = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // checkBoxHelp
@@ -49,12 +50,13 @@
             // 
             // buttonNewGame
             // 
-            this.buttonNewGame.Location = new System.Drawing.Point(291, 40);
+            this.buttonNewGame.Location = new System.Drawing.Point(292, 31);
             this.buttonNewGame.Name = "buttonNewGame";
             this.buttonNewGame.Size = new System.Drawing.Size(75, 23);
             this.buttonNewGame.TabIndex = 1;
             this.buttonNewGame.Text = "New Game";
             this.buttonNewGame.UseVisualStyleBackColor = true;
+            this.buttonNewGame.Click += new System.EventHandler(this.buttonNewGame_Click);
             // 
             // textBoxSizeX
             // 
@@ -88,18 +90,28 @@
             this.label2.TabIndex = 5;
             this.label2.Text = "Board Height:";
             // 
-            // Form1
+            // buttonUndo
+            // 
+            this.buttonUndo.Location = new System.Drawing.Point(292, 60);
+            this.buttonUndo.Name = "buttonUndo";
+            this.buttonUndo.Size = new System.Drawing.Size(75, 23);
+            this.buttonUndo.TabIndex = 6;
+            this.buttonUndo.Text = "Undo";
+            this.buttonUndo.UseVisualStyleBackColor = true;
+            // 
+            // ReversiGame
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.buttonUndo);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.labelSizeX);
             this.Controls.Add(this.textBoxSizeY);
             this.Controls.Add(this.textBoxSizeX);
             this.Controls.Add(this.buttonNewGame);
             this.Controls.Add(this.checkBoxHelp);
-            this.Name = "Form1";
+            this.Name = "ReversiGame";
             this.Text = "Form1";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -114,6 +126,7 @@
         private System.Windows.Forms.TextBox textBoxSizeY;
         private System.Windows.Forms.Label labelSizeX;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button buttonUndo;
     }
 }
 

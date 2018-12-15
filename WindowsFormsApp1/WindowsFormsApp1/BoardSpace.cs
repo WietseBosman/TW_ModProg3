@@ -12,12 +12,12 @@ namespace ReversiGame
 {
     public partial class BoardSpace : UserControl
     {
-        const byte empty = 0;
-        const byte blue = 1;
-        const byte red = 2;
+        public const byte empty = 0;
+        public const byte blue = 1;
+        public const byte red = 2;
 
-
-        byte state;
+        public bool LegalMove = false;
+        public byte state;
 
         public BoardSpace()
         {
