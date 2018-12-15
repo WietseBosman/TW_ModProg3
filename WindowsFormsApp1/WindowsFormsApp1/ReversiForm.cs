@@ -14,9 +14,11 @@ namespace ReversiGame
     {
         BoardSpace[][] board;
         public const int spaceSize = 80;
-        const int tokenSize = 30;
+        //const int tokenSize = 30;
         const int boardX = 200;
         const int boardY = 200;
+
+        int tempTest = 0;
 
         public ReversiGame()
         {
@@ -30,14 +32,15 @@ namespace ReversiGame
                 board[i] = new BoardSpace[3];
                 for (int j = 0; j < board[i].Length; j++)
                 {
-                    board[i][j] = new BoardSpace(spaceSize)
+                    board[i][j] = new BoardSpace()
                     {
-                        Location = new Point(boardX + i * spaceSize, boardY + j * spaceSize)
+                        Location = new Point(boardX + i * spaceSize, boardY + j * spaceSize),
+                        Size = new Size(spaceSize, spaceSize)
                     };
                     this.Controls.Add(board[i][j]);
                 }
             }
-            this.Invalidate();
+            tempTest = 1;
                 
 
         }
@@ -45,13 +48,21 @@ namespace ReversiGame
         //responsible for drawing the board, score and gamestate.
         private void draw(object obj, PaintEventArgs pea)
         {
-
+            //need an exception for when no board exists yet
+            if (tempTest == 1)
+            this.drawBoard(pea);
         }
 
         //draws the board, optionally including help indications
-        private void drawBoard()
+        private void drawBoard(PaintEventArgs pea)
         {
-
+            for (int i = 0; i < board.Length; i++)
+            {
+                for (int j = 0; j < board[i].Length; j++)
+                {
+                    board[i][j].Draw(pea);
+                }
+            }
         }
 
         //redraws the board when the help checkbox is changed 
