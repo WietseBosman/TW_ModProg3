@@ -26,15 +26,16 @@ namespace ReversiGame
         }
 
         //draws the BoardSpace
-        public void Draw(PaintEventArgs pea)
+        public void Draw(PaintEventArgs pea, bool showHelp)
         {
             pea.Graphics.DrawRectangle(Pens.Black, this.Location.X, this.Location.Y, this.Size.Width, this.Size.Height);
 
             if (this.state == blue)
                 pea.Graphics.FillEllipse(Brushes.Blue, this.Location.X + 5, this.Location.Y + 5, this.Size.Width - 10, this.Size.Height - 10);
-            if (this.state == red)
+            else if (this.state == red)
                 pea.Graphics.FillEllipse(Brushes.Red, this.Location.X + 5, this.Location.Y + 5, this.Size.Width - 10, this.Size.Height - 10);
-
+            else if (showHelp && LegalMove)
+                pea.Graphics.FillEllipse(Brushes.Green, this.Location.X + 8, this.Location.Y + 8, this.Size.Width - 16, this.Size.Height - 16);
 
         }
 

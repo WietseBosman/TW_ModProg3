@@ -35,6 +35,7 @@
             this.labelSizeX = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.buttonUndo = new System.Windows.Forms.Button();
+            this.labelGameState = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // checkBoxHelp
@@ -99,11 +100,21 @@
             this.buttonUndo.Text = "Undo";
             this.buttonUndo.UseVisualStyleBackColor = true;
             // 
+            // labelGameState
+            // 
+            this.labelGameState.AutoSize = true;
+            this.labelGameState.Location = new System.Drawing.Point(610, 45);
+            this.labelGameState.Name = "labelGameState";
+            this.labelGameState.Size = new System.Drawing.Size(69, 13);
+            this.labelGameState.TabIndex = 7;
+            this.labelGameState.Text = "Board Width:";
+            // 
             // ReversiGame
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.labelGameState);
             this.Controls.Add(this.buttonUndo);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.labelSizeX);
@@ -127,6 +138,7 @@
         private System.Windows.Forms.Label labelSizeX;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button buttonUndo;
+        private System.Windows.Forms.Label labelGameState;
     }
 }
 

@@ -15,10 +15,14 @@ namespace ReversiGame
         static readonly int[, ] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 0, -1 } };
 
         BoardSpace[][] board;
-        public const int spaceSize = 80;
-        //const int tokenSize = 30;
-        const int boardX = 200;
-        const int boardY = 200;
+
+
+        const int maxSpaceSize = 140;
+        const int minSpaceSize = 30;
+        public int spaceSize = 60;
+        
+        int boardX = 200;
+        int boardY = 200;
 
         const byte turnBlue = 0;
         const byte turnRed = 1;
@@ -32,8 +36,9 @@ namespace ReversiGame
         public ReversiGame()
         {
             InitializeComponent();
-
+            this.WindowState = FormWindowState.Maximized;
             this.Paint += draw;
+            this.SizeChanged += sizeChanged;
 
             this.textBoxSizeX.Text = "6";
             this.textBoxSizeY.Text = "4";
@@ -43,7 +48,15 @@ namespace ReversiGame
 
         }
 
-        
+        //updates location of buttons and board when the size of the form gets changed
+        private void sizeChanged(object obj, EventArgs e)
+        {
+            this.buttonNewGame.Location = new Point(this.ClientSize.Width / 2, 30);
+            this.buttonUndo.Location = new Point(this.ClientSize.Width / 2, 60);
+
+            //tekstvakken, labels, checkbox, board
+              
+        }
 
         //responsible for drawing the board, score and gamestate.
         private void draw(object obj, PaintEventArgs pea)
@@ -60,7 +73,7 @@ namespace ReversiGame
             {
                 for (int j = 0; j < board[i].Length; j++)
                 {
-                    board[i][j].Draw(pea);
+                    board[i][j].Draw(pea, this.checkBoxHelp.Checked);
                 }
             }
         }
@@ -90,6 +103,28 @@ namespace ReversiGame
                     this.Controls.Add(board[i][j]);
                 }
             }
+
+            board[board.Length / 2 - 1][board[0].Length / 2 - 1].state = BoardSpace.red;
+            board[board.Length / 2 - 1][board[0].Length / 2    ].state = BoardSpace.blue;
+            board[board.Length / 2    ][board[0].Length / 2 - 1].state = BoardSpace.blue;
+            board[board.Length / 2    ][board[0].Length / 2    ].state = BoardSpace.red;
+
+            switch (this.gameState)
+            {
+                case turnBlue:
+                    this.labelGameState.Text = "Blue player's turn";
+                    break;
+                case turnRed:
+                    this.labelGameState.Text = "Red player's turn";
+                    break;
+                case victoryBlue:
+                    this.labelGameState.Text = "Blue is victorious!";
+                    break;
+                case victoryRed:
+                    this.labelGameState.Text = "Red is victorious!";
+                    break;
+            }
+            //this.checkMoves();
             boardInitialized = true;
             this.Invalidate();
         }
