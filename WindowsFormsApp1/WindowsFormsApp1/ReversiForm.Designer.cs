@@ -1,6 +1,6 @@
 ﻿namespace ReversiGame
 {
-    partial class ReversiGame
+    partial class ReversiForm
     {
         /// <summary>
         /// Required designer variable.
@@ -109,7 +109,7 @@
             this.labelGameState.TabIndex = 7;
             this.labelGameState.Text = "Board Width:";
             // 
-            // ReversiGame
+            // ReversiForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -122,7 +122,7 @@
             this.Controls.Add(this.textBoxSizeX);
             this.Controls.Add(this.buttonNewGame);
             this.Controls.Add(this.checkBoxHelp);
-            this.Name = "ReversiGame";
+            this.Name = "ReversiForm";
             this.Text = "Form1";
             this.ResumeLayout(false);
             this.PerformLayout();

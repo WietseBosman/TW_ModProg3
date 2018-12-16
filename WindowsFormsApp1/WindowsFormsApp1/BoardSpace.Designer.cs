@@ -37,6 +37,7 @@
             this.BackColor = System.Drawing.Color.Transparent;
             this.Name = "BoardSpace";
             this.Size = new System.Drawing.Size(145, 116);
+            this.Click += new System.EventHandler(this.BoardSpace_Click);
             this.ResumeLayout(false);
 
         }

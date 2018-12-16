@@ -16,7 +16,8 @@ namespace ReversiGame
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ReversiGame());
+            ReversiForm reversiGame = new ReversiForm();
+            Application.Run(reversiGame);
         }
     }
 }

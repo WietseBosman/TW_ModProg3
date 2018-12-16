@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace ReversiGame
 {
-    public partial class ReversiGame : Form
+    public partial class ReversiForm : Form
     {
-        static readonly int[, ] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 0, -1 } };
+        static readonly int[, ] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } };
 
         BoardSpace[][] board;
 
@@ -24,16 +24,16 @@ namespace ReversiGame
         int boardX = 200;
         int boardY = 200;
 
-        const byte turnBlue = 0;
-        const byte turnRed = 1;
-        const byte victoryBlue = 2;
-        const byte victoryRed = 3;
+        const byte playerBlue = 0;
+        const byte playerRed = 1;
+        const byte victory = 2;        
 
-        byte gameState;
+        
+        public int gameState;
 
         bool boardInitialized = false;
 
-        public ReversiGame()
+        public ReversiForm()
         {
             InitializeComponent();
             this.WindowState = FormWindowState.Maximized;
@@ -54,7 +54,8 @@ namespace ReversiGame
             this.buttonNewGame.Location = new Point(this.ClientSize.Width / 2, 30);
             this.buttonUndo.Location = new Point(this.ClientSize.Width / 2, 60);
 
-            //tekstvakken, labels, checkbox, board
+            //tbd: tekstvakken, labels, checkbox, board
+            //tbd: change boardspacesize
               
         }
 
@@ -64,6 +65,20 @@ namespace ReversiGame
             //need an exception for when no board exists yet
             if (boardInitialized)
             this.drawBoard(pea);
+            switch (this.gameState)
+            {
+                case playerBlue:
+                    this.labelGameState.Text = "Blue player's turn";
+                    break;
+                case playerRed:
+                    this.labelGameState.Text = "Red player's turn";
+                    break;
+                case victory:
+                    this.labelGameState.Text = "Someone is victorious!";
+                    break;
+
+
+            }
         }
 
         //draws the board, optionally including help indications
@@ -89,6 +104,7 @@ namespace ReversiGame
         {
             boardInitialized = false;
             board = new BoardSpace[int.Parse(this.textBoxSizeX.Text)][];
+            //tbd: change boardspacesize
 
             for (int i = 0; i < board.Length; i++)
             {
@@ -98,8 +114,11 @@ namespace ReversiGame
                     board[i][j] = new BoardSpace()
                     {
                         Location = new Point(boardX + i * spaceSize, boardY + j * spaceSize),
-                        Size = new Size(spaceSize, spaceSize)
+                        Size = new Size(spaceSize, spaceSize),
+                        x = i, y = j,
+                        state = BoardSpace.empty                    
                     };
+                    
                     this.Controls.Add(board[i][j]);
                 }
             }
@@ -109,22 +128,8 @@ namespace ReversiGame
             board[board.Length / 2    ][board[0].Length / 2 - 1].state = BoardSpace.blue;
             board[board.Length / 2    ][board[0].Length / 2    ].state = BoardSpace.red;
 
-            switch (this.gameState)
-            {
-                case turnBlue:
-                    this.labelGameState.Text = "Blue player's turn";
-                    break;
-                case turnRed:
-                    this.labelGameState.Text = "Red player's turn";
-                    break;
-                case victoryBlue:
-                    this.labelGameState.Text = "Blue is victorious!";
-                    break;
-                case victoryRed:
-                    this.labelGameState.Text = "Red is victorious!";
-                    break;
-            }
-            //this.checkMoves();
+            this.checkMoves();
+            this.gameState = playerBlue;
             boardInitialized = true;
             this.Invalidate();
         }
@@ -132,6 +137,7 @@ namespace ReversiGame
         //calculates which moves are legal
         private void checkMoves()
         {
+            
             for (int i = 0; i < board.Length; i++)
             {
                 for (int j = 0; j < board[i].Length; j++)
@@ -144,37 +150,59 @@ namespace ReversiGame
         //checks whether the current player can make a move onto this space
         private bool checkMove(int i, int j)
         {
+            bool moveAble = false;
             for (int k = 0; k < 8; k++)
                 if (checkDirection(i, j, directions[k,0], directions[k,1]))
-                    return true;
-            return false;
+                {
+                    board[i][j].legalDirection[k] = true;
+                    moveAble = true;
+                }
+                    
+            return moveAble;
         }
 
         private bool checkDirection(int i, int j, int dirX, int dirY)
         {
-            byte activeColour = (gameState == 0) ? BoardSpace.blue : BoardSpace.red;
+            
             bool adjacentEnemy = false;
 
-            for (int x = i; x <= board.Length && x >= 0; x += dirX)
-                for (int y = j; y <= board[i].Length && y >= 0; y += dirY)
-                {
-                    if (board[x][y].state == activeColour)
-                        if (adjacentEnemy == true)
-                            return true;
-                        else
-                            return false;
-                    else if (board[x][y].state == BoardSpace.empty)
-                        return false;
-                }
 
+
+            for (int x = i + dirX, y = j + dirY; ((x < board.Length && x >= 0) && (y < board[0].Length && y >= 0)); x += dirX, y += dirY)
+                if (board[x][y].state == gameState)
+                    if (adjacentEnemy == true)
+                        return true;
+                    else
+                        return false;
+                else if (board[x][y].state == BoardSpace.empty)
+                    return false;
+                else
+                    adjacentEnemy = true;
                     
             return false;
         }
 
         //handles a player move
-        private void makeMove()
+        public void makeMove(int i, int j)
         {
+            for (int k = 0; k < 8; k++)
+                if (board[i][j].legalDirection[k])
+                {
+                    int dirX = ReversiForm.directions[k, 0];
+                    int dirY = ReversiForm.directions[k, 1];
 
+                    for (int x = i + dirX, y = j + dirY; ((x < board.Length && x >= 0) && (y < board[0].Length && y >= 0)); x += dirX, y += dirY)
+                    {
+                        if (board[x][y].state == this.gameState)
+                            break;
+                        board[x][y].state = (byte)(this.gameState);
+                    }
+                }
+
+            this.gameState = 1 - this.gameState;
+            this.checkMoves();
+            this.Invalidate();
+                    
         }
 
         private void buttonNewGame_Click(object sender, EventArgs e)
