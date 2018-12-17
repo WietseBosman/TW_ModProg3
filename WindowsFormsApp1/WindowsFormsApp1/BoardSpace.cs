@@ -12,13 +12,16 @@ namespace ReversiGame
 {
     public partial class BoardSpace : UserControl
     {
-        public const byte empty = 2;
-        public const byte blue = 0;
-        public const byte red = 1;
+        public const int empty = 2;
+        public const int blue = 0;
+        public const int red = 1;
 
+        public int turnChanged;
+        public int lastState;
+        
         public bool[] legalDirection = new bool[8];
-        public bool LegalMove = false;
-        public byte state;
+        public bool LegalMove;
+        public int state;
 
         public int x, y;
 
@@ -46,16 +49,6 @@ namespace ReversiGame
 
         }
 
-        private void BoardSpace_Click(object sender, EventArgs e)
-        {
-            if (this.LegalMove)
-            {
-                ReversiForm parentForm = (ReversiForm)this.FindForm();
-                this.state = (byte)(parentForm.gameState + 1);
-                parentForm.makeMove(x, y);
-            }
-
-
-        }
+        
     }
 }

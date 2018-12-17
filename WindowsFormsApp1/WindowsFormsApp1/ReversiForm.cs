@@ -14,7 +14,7 @@ namespace ReversiGame
     {
         static readonly int[, ] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } };
 
-        BoardSpace[][] board;
+        BoardSpace[,] board;
 
 
         const int maxSpaceSize = 140;
@@ -24,14 +24,19 @@ namespace ReversiGame
         int boardX = 200;
         int boardY = 200;
 
-        const byte playerBlue = 0;
-        const byte playerRed = 1;
-        const byte victory = 2;        
+        const int playerBlue = 0;
+        const int playerRed = 1;
+        const int victory = 2;
+
+        int boardWidth;
+        int boardHeight;
+
+        int turn;
 
         
         public int gameState;
 
-        bool boardInitialized = false;
+        bool boardInitialized;
 
         public ReversiForm()
         {
@@ -84,11 +89,11 @@ namespace ReversiGame
         //draws the board, optionally including help indications
         private void drawBoard(PaintEventArgs pea)
         {
-            for (int i = 0; i < board.Length; i++)
+            for (int i = 0; i < boardWidth; i++)
             {
-                for (int j = 0; j < board[i].Length; j++)
+                for (int j = 0; j < boardHeight; j++)
                 {
-                    board[i][j].Draw(pea, this.checkBoxHelp.Checked);
+                    board[i,j].Draw(pea, this.checkBoxHelp.Checked);
                 }
             }
         }
@@ -102,107 +107,179 @@ namespace ReversiGame
         //resets the board- and gamestate and resizes the board
         private void newGame()
         {
-            boardInitialized = false;
-            board = new BoardSpace[int.Parse(this.textBoxSizeX.Text)][];
+            if (this.boardInitialized)
+            {
+                for (int i = 0; i < this.boardWidth; i++)
+                    for (int j = 0; j < this.boardHeight; j++)
+                        this.Controls.Remove(this.board[i, j]);
+            }
+
+            this.boardInitialized = false;
+            this.boardWidth = int.Parse(this.textBoxSizeX.Text);
+            this.boardHeight = int.Parse(this.textBoxSizeY.Text);
+            this.board = new BoardSpace[this.boardWidth, this.boardHeight];
             //tbd: change boardspacesize
 
-            for (int i = 0; i < board.Length; i++)
+            for (int i = 0; i < this.boardWidth; i++)
             {
-                board[i] = new BoardSpace[int.Parse(this.textBoxSizeY.Text)];
-                for (int j = 0; j < board[i].Length; j++)
+                
+                for (int j = 0; j < this.boardHeight; j++)
                 {
-                    board[i][j] = new BoardSpace()
+                    this.board[i,j] = new BoardSpace()
                     {
-                        Location = new Point(boardX + i * spaceSize, boardY + j * spaceSize),
+                        Location = new Point(this.boardX + i * this.spaceSize, this.boardY + j * this.spaceSize),
                         Size = new Size(spaceSize, spaceSize),
                         x = i, y = j,
-                        state = BoardSpace.empty                    
+                        state = BoardSpace.empty,
                     };
-                    
-                    this.Controls.Add(board[i][j]);
+                this.board[i,j].Click += this.makeMove;
+                this.Controls.Add(this.board[i,j]);
                 }
             }
 
-            board[board.Length / 2 - 1][board[0].Length / 2 - 1].state = BoardSpace.red;
-            board[board.Length / 2 - 1][board[0].Length / 2    ].state = BoardSpace.blue;
-            board[board.Length / 2    ][board[0].Length / 2 - 1].state = BoardSpace.blue;
-            board[board.Length / 2    ][board[0].Length / 2    ].state = BoardSpace.red;
+            this.board[boardWidth / 2 - 1, this.boardHeight / 2 - 1].state = BoardSpace.red;
+            this.board[boardWidth / 2 - 1, this.boardHeight / 2    ].state = BoardSpace.blue;
+            this.board[boardWidth / 2    , this.boardHeight / 2 - 1].state = BoardSpace.blue;
+            this.board[boardWidth / 2    , this.boardHeight / 2    ].state = BoardSpace.red;
 
-            this.checkMoves();
+            this.turn = 0;
             this.gameState = playerBlue;
+            this.checkMoves();
             boardInitialized = true;
             this.Invalidate();
+        }
+
+        //calculates who is victorious
+        private void calculateVictor()
+        {
+            int score = 0;
+            for (int i = 0; i < this.boardWidth; i++)
+                for (int j = 0; j < this.boardHeight; j++)
+                    score += this.board[i, j].state * 2 - 1;
+            if (score == 0)
+                this.labelGameState.Text = "It's a tie!";
+            else if (score > 0)
+                this.labelGameState.Text = "Red is victorious!";
+            else
+                this.labelGameState.Text = "Blue is victorious!";
         }
 
         //calculates which moves are legal
         private void checkMoves()
         {
-            
-            for (int i = 0; i < board.Length; i++)
+            bool movesAvailable = false;
+            for (int i = 0; i < boardWidth; i++)
             {
-                for (int j = 0; j < board[i].Length; j++)
+                for (int j = 0; j < boardHeight; j++)
                 {
-                    board[i][j].LegalMove = checkMove(i, j);
+                    if (checkMove(i, j))
+                    {
+                        board[i, j].LegalMove = true;
+                        movesAvailable = true;
+                    }
+                    else
+                        board[i, j].LegalMove = false;
                 }
             }
+            if (movesAvailable)
+                return;
+            this.gameState = 1 - this.gameState;
+            for (int i = 0; i < boardWidth; i++)
+            {
+                for (int j = 0; j < boardHeight; j++)
+                {
+                    if (checkMove(i, j))
+                    {
+                        board[i, j].LegalMove = true;
+                        movesAvailable = true;
+                    }
+                    else
+                        board[i, j].LegalMove = false;
+                }
+            }
+            if (movesAvailable)
+                return;
+            this.labelGameState.Text = "test!"; 
+                //this.calculateVictor();
         }
+
+        
 
         //checks whether the current player can make a move onto this space
         private bool checkMove(int i, int j)
         {
             bool moveAble = false;
-            for (int k = 0; k < 8; k++)
-                if (checkDirection(i, j, directions[k,0], directions[k,1]))
+            if (this.board[i,j].state == BoardSpace.empty)
+                for (int k = 0; k < 8; k++)
                 {
-                    board[i][j].legalDirection[k] = true;
-                    moveAble = true;
+                    if (checkDirection(i, j, directions[k, 0], directions[k, 1]))
+                    {
+                        this.board[i, j].legalDirection[k] = true;
+                        moveAble = true;
+                    }
+                    else
+                        this.board[i, j].legalDirection[k] = false;
                 }
                     
+
             return moveAble;
         }
 
         private bool checkDirection(int i, int j, int dirX, int dirY)
         {
-            
             bool adjacentEnemy = false;
-
-
-
-            for (int x = i + dirX, y = j + dirY; ((x < board.Length && x >= 0) && (y < board[0].Length && y >= 0)); x += dirX, y += dirY)
-                if (board[x][y].state == gameState)
+            for (int x = i + dirX, y = j + dirY; ((x < this.boardWidth && x >= 0) && (y < this.boardHeight && y >= 0)); x += dirX, y += dirY)
+            {
+                if (this.board[x, y].state == gameState)
+                {
                     if (adjacentEnemy == true)
                         return true;
                     else
                         return false;
-                else if (board[x][y].state == BoardSpace.empty)
+                }
+
+                else if (board[x, y].state == BoardSpace.empty)
                     return false;
                 else
                     adjacentEnemy = true;
-                    
+            }
+                
             return false;
         }
 
         //handles a player move
-        public void makeMove(int i, int j)
+        public void makeMove(object obj, EventArgs e)
         {
-            for (int k = 0; k < 8; k++)
-                if (board[i][j].legalDirection[k])
-                {
-                    int dirX = ReversiForm.directions[k, 0];
-                    int dirY = ReversiForm.directions[k, 1];
-
-                    for (int x = i + dirX, y = j + dirY; ((x < board.Length && x >= 0) && (y < board[0].Length && y >= 0)); x += dirX, y += dirY)
+            BoardSpace clickedSpace = (BoardSpace)obj;
+            if (clickedSpace.LegalMove)
+            {
+                int dirX, dirY;
+                for (int k = 0; k < 8; k++)
+                    if (clickedSpace.legalDirection[k])
                     {
-                        if (board[x][y].state == this.gameState)
-                            break;
-                        board[x][y].state = (byte)(this.gameState);
-                    }
-                }
+                        dirX = ReversiForm.directions[k, 0];
+                        dirY = ReversiForm.directions[k, 1];
 
-            this.gameState = 1 - this.gameState;
-            this.checkMoves();
-            this.Invalidate();
-                    
+                        for (int x = clickedSpace.x + dirX, y = clickedSpace.y + dirY;
+                            ((x < boardWidth && x >= 0) && (y < boardHeight && y >= 0));
+                            x += dirX, y += dirY)
+                        {
+                            if (board[x, y].state == this.gameState)
+                                break;
+                            board[x, y].lastState =     board[x, y].state;
+                            board[x, y].turnChanged =   this.turn;
+                            board[x, y].state =  this.gameState;
+                        }
+                    }
+                clickedSpace.lastState = clickedSpace.state;
+                clickedSpace.turnChanged = this.turn++;
+                clickedSpace.state = this.gameState;
+
+                this.gameState = 1 - this.gameState;
+                this.checkMoves();
+                this.Invalidate();
+            }
+                              
         }
 
         private void buttonNewGame_Click(object sender, EventArgs e)
