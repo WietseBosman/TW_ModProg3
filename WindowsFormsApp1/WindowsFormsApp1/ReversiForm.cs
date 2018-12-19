@@ -20,18 +20,24 @@ namespace ReversiGame
         const int maxSpaceSize = 140;
         const int minSpaceSize = 30;
         public int spaceSize = 60;
-        
+
         int boardX = 200;
         int boardY = 200;
 
         const int playerBlue = 0;
         const int playerRed = 1;
-        const int victory = 2;
+        const int victoryBlue = 2;
+        const int victoryRed = 3;
+        const int tie = 4;
+
+        int[] score = new int[2];
 
         int boardWidth;
         int boardHeight;
 
         int turn;
+
+        
 
         
         public int gameState;
@@ -64,12 +70,17 @@ namespace ReversiGame
               
         }
 
-        //responsible for drawing the board, score and gamestate.
+        //responsible for drawing the screen
         private void draw(object obj, PaintEventArgs pea)
         {
-            //need an exception for when no board exists yet
+
+            DateTime test = DateTime.Now;
+
+            //displays the baord
             if (boardInitialized)
             this.drawBoard(pea);
+
+            //displays gamestate
             switch (this.gameState)
             {
                 case playerBlue:
@@ -78,25 +89,36 @@ namespace ReversiGame
                 case playerRed:
                     this.labelGameState.Text = "Red player's turn";
                     break;
-                case victory:
-                    this.labelGameState.Text = "Someone is victorious!";
+                case victoryBlue:
+                    this.labelGameState.Text = "Blue is victorious!";
                     break;
-
-
+                case victoryRed:
+                    this.labelGameState.Text = "Red is victorious!";
+                    break;
+                case tie:
+                    this.labelGameState.Text = "It's a draw!";
+                    break;
             }
+
+            //displays score
+            this.labelScoreBlue.Text = $"Blue: {score[playerBlue]}";
+            this.labelScoreRed.Text = $"Red: {score[playerRed]}";
+
+            TimeSpan tstest = DateTime.Now.Subtract(test);
+            labelTest.Text = tstest.Milliseconds.ToString();
         }
 
         //draws the board, optionally including help indications
         private void drawBoard(PaintEventArgs pea)
         {
-            for (int i = 0; i < boardWidth; i++)
-            {
-                for (int j = 0; j < boardHeight; j++)
-                {
-                    board[i,j].Draw(pea, this.checkBoxHelp.Checked);
-                }
-            }
+            bool drawHelp = this.checkBoxHelp.Checked;
+            foreach (BoardSpace bs in board)
+                if(bs.updated)
+                bs.DrawFull(pea.Graphics, drawHelp);                
+            
         }
+
+        
 
         //redraws the board when the help checkbox is changed 
         private void checkBoxHelp_CheckedChanged(object sender, EventArgs e)
@@ -107,6 +129,8 @@ namespace ReversiGame
         //resets the board- and gamestate and resizes the board
         private void newGame()
         {
+            score[0] = 2; score[1] = 2;
+
             if (this.boardInitialized)
             {
                 for (int i = 0; i < this.boardWidth; i++)
@@ -131,6 +155,7 @@ namespace ReversiGame
                         Size = new Size(spaceSize, spaceSize),
                         x = i, y = j,
                         state = BoardSpace.empty,
+                        updated = true
                     };
                 this.board[i,j].Click += this.makeMove;
                 this.Controls.Add(this.board[i,j]);
@@ -146,22 +171,21 @@ namespace ReversiGame
             this.gameState = playerBlue;
             this.checkMoves();
             boardInitialized = true;
+            
             this.Invalidate();
         }
 
         //calculates who is victorious
         private void calculateVictor()
         {
-            int score = 0;
-            for (int i = 0; i < this.boardWidth; i++)
-                for (int j = 0; j < this.boardHeight; j++)
-                    score += this.board[i, j].state * 2 - 1;
-            if (score == 0)
-                this.labelGameState.Text = "It's a tie!";
-            else if (score > 0)
-                this.labelGameState.Text = "Red is victorious!";
+
+            int victor = score[0] - score[1];
+            if (victor == 0)
+                this.gameState = ReversiForm.tie;
+            else if (victor > 0)
+                this.gameState = ReversiForm.victoryBlue;
             else
-                this.labelGameState.Text = "Blue is victorious!";
+                this.gameState = ReversiForm.victoryRed;
         }
 
         //calculates which moves are legal
@@ -199,11 +223,8 @@ namespace ReversiGame
             }
             if (movesAvailable)
                 return;
-            this.labelGameState.Text = "test!"; 
-                //this.calculateVictor();
+            this.calculateVictor();
         }
-
-        
 
         //checks whether the current player can make a move onto this space
         private bool checkMove(int i, int j)
@@ -266,18 +287,23 @@ namespace ReversiGame
                         {
                             if (board[x, y].state == this.gameState)
                                 break;
-                            board[x, y].lastState =     board[x, y].state;
-                            board[x, y].turnChanged =   this.turn;
-                            board[x, y].state =  this.gameState;
+                            this.board[x, y].lastState =     board[x, y].state;
+                            this.board[x, y].turnChanged =   this.turn;
+                            this.board[x, y].state =         this.gameState;
+                            this.score[gameState]++;
+                            this.score[1 - gameState]--;
+                            this.board[x, y].updated = true;
                         }
                     }
                 clickedSpace.lastState = clickedSpace.state;
                 clickedSpace.turnChanged = this.turn++;
                 clickedSpace.state = this.gameState;
+                clickedSpace.updated = true;
+                this.score[gameState]++;
 
                 this.gameState = 1 - this.gameState;
                 this.checkMoves();
-                this.Invalidate();
+                this.Invalidate(); 
             }
                               
         }
