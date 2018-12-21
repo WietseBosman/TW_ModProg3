@@ -12,38 +12,31 @@ namespace ReversiGame
 {
     public partial class ReversiForm : Form
     {
-        static readonly int[, ] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } };
-
+        
+        //variables for board setup
         BoardSpace[,] board;
+        int boardWidth, boardHeight;
+        static readonly int[,] directions = { { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } };
 
+        //variables for the display-size of the board
+        public int spaceSize;
+        int boardX, boardY;
+        const int headerSize = 80;
+        const int margin = 60;
 
-        const int maxSpaceSize = 140;
-        const int minSpaceSize = 30;
-        public int spaceSize = 60;
+        //variables for the current gamestate, as well as player numbers
+        int gameState;
+        const int playerBlue = 0, playerRed = 1, victoryBlue = 2, victoryRed = 3, tie = 4;
 
-        int boardX = 200;
-        int boardY = 200;
-
-        const int playerBlue = 0;
-        const int playerRed = 1;
-        const int victoryBlue = 2;
-        const int victoryRed = 3;
-        const int tie = 4;
-
-        int[] score = new int[2];
-
-        int boardWidth;
-        int boardHeight;
-
+        //variables for calculating score
         int turn;
+        int[] score = new int[2], lastScore = new int[2];
 
-        
-
-        
-        public int gameState;
-
+        //other variables
         bool boardInitialized;
-
+        bool canUndo;
+        
+        //costructor, executes when the game is opened.
         public ReversiForm()
         {
             InitializeComponent();
@@ -51,34 +44,19 @@ namespace ReversiGame
             this.Paint += draw;
             this.SizeChanged += sizeChanged;
 
-            this.textBoxSizeX.Text = "6";
-            this.textBoxSizeY.Text = "4";
+            this.textBoxBoardWidth.Text = "6";
+            this.textBoxBoardHeight.Text = "4";
             this.newGame();
-            
-                
 
-        }
-
-        //updates location of buttons and board when the size of the form gets changed
-        private void sizeChanged(object obj, EventArgs e)
-        {
-            this.buttonNewGame.Location = new Point(this.ClientSize.Width / 2, 30);
-            this.buttonUndo.Location = new Point(this.ClientSize.Width / 2, 60);
-
-            //tbd: tekstvakken, labels, checkbox, board
-            //tbd: change boardspacesize
-              
         }
 
         //responsible for drawing the screen
         private void draw(object obj, PaintEventArgs pea)
         {
 
-            DateTime test = DateTime.Now;
-
-            //displays the baord
+            //displays the board
             if (boardInitialized)
-            this.drawBoard(pea);
+            this.drawBoard(pea.Graphics);
 
             //displays gamestate
             switch (this.gameState)
@@ -103,47 +81,73 @@ namespace ReversiGame
             //displays score
             this.labelScoreBlue.Text = $"Blue: {score[playerBlue]}";
             this.labelScoreRed.Text = $"Red: {score[playerRed]}";
-
-            TimeSpan tstest = DateTime.Now.Subtract(test);
-            labelTest.Text = tstest.Milliseconds.ToString();
         }
 
         //draws the board, optionally including help indications
-        private void drawBoard(PaintEventArgs pea)
+        private void drawBoard(Graphics gr)
         {
             bool drawHelp = this.checkBoxHelp.Checked;
             foreach (BoardSpace bs in board)
-                if(bs.updated)
-                bs.DrawFull(pea.Graphics, drawHelp);                
+                bs.DrawBoardSpace(gr, drawHelp);                
             
         }
 
-        
-
-        //redraws the board when the help checkbox is changed 
-        private void checkBoxHelp_CheckedChanged(object sender, EventArgs e)
+        //updates location of buttons and board when the size of the form gets changed
+        private void sizeChanged(object obj, EventArgs e)
         {
+            this.labelBoardWidth.Location = new Point(this.ClientSize.Width / 2 - 205, 34);
+            this.labelBoardHeight.Location = new Point(this.ClientSize.Width / 2 - 205, 64);
+
+            this.textBoxBoardWidth.Location = new Point(this.ClientSize.Width / 2 - 130, 30);
+            this.textBoxBoardHeight.Location = new Point(this.ClientSize.Width / 2 - 130, 60);
+
+            this.buttonNewGame.Location = new Point(this.ClientSize.Width / 2 - 20, 29);
+            this.buttonUndo.Location = new Point(this.ClientSize.Width / 2 - 20, 59);
+
+            this.labelGameState.Location = new Point(this.ClientSize.Width / 2 + 60, 34);
+            this.checkBoxHelp.Location = new Point(this.ClientSize.Width / 2 + 63, 64);
+
+            this.labelScore.Location = new Point(this.ClientSize.Width / 2 + 180, 14);
+            this.labelScoreBlue.Location = new Point(this.ClientSize.Width / 2 + 180, 34);
+            this.labelScoreRed.Location = new Point(this.ClientSize.Width / 2 + 180, 64);
+
+            this.updateBoardSize();
+
             this.Invalidate();
+
         }
 
-        //resets the board- and gamestate and resizes the board
+        //updates the size and location of the board
+        private void updateBoardSize()
+        {
+            this.spaceSize = Math.Min((this.ClientSize.Height - ReversiForm.headerSize - ReversiForm.margin) / this.boardHeight, (this.ClientSize.Width - ReversiForm.margin * 2) / this.boardWidth);
+            this.boardX = (this.ClientSize.Width - this.spaceSize * this.boardWidth) / 2;
+            this.boardY = (this.ClientSize.Height + ReversiForm.headerSize - this.spaceSize * this.boardHeight) / 2;
+
+            foreach (BoardSpace bs in board)
+            {
+                bs.Location = new Point(this.boardX + bs.x * this.spaceSize, this.boardY + bs.y * this.spaceSize);
+                bs.Size = new Size(spaceSize, spaceSize);
+            }
+        }
+        
+        //sets up a new game with size specified in the textboxes
         private void newGame()
         {
-            score[0] = 2; score[1] = 2;
-
+            
+            //clears previous board
             if (this.boardInitialized)
             {
-                for (int i = 0; i < this.boardWidth; i++)
-                    for (int j = 0; j < this.boardHeight; j++)
-                        this.Controls.Remove(this.board[i, j]);
+                foreach (BoardSpace bs in board)
+                    this.Controls.Remove(bs);
             }
 
             this.boardInitialized = false;
-            this.boardWidth = int.Parse(this.textBoxSizeX.Text);
-            this.boardHeight = int.Parse(this.textBoxSizeY.Text);
-            this.board = new BoardSpace[this.boardWidth, this.boardHeight];
-            //tbd: change boardspacesize
 
+            //creates new board
+            this.boardWidth = int.Parse(this.textBoxBoardWidth.Text);
+            this.boardHeight = int.Parse(this.textBoxBoardHeight.Text);
+            this.board = new BoardSpace[this.boardWidth, this.boardHeight];
             for (int i = 0; i < this.boardWidth; i++)
             {
                 
@@ -151,28 +155,80 @@ namespace ReversiGame
                 {
                     this.board[i,j] = new BoardSpace()
                     {
-                        Location = new Point(this.boardX + i * this.spaceSize, this.boardY + j * this.spaceSize),
-                        Size = new Size(spaceSize, spaceSize),
+                        
                         x = i, y = j,
-                        state = BoardSpace.empty,
-                        updated = true
                     };
                 this.board[i,j].Click += this.makeMove;
                 this.Controls.Add(this.board[i,j]);
                 }
             }
 
-            this.board[boardWidth / 2 - 1, this.boardHeight / 2 - 1].state = BoardSpace.red;
-            this.board[boardWidth / 2 - 1, this.boardHeight / 2    ].state = BoardSpace.blue;
-            this.board[boardWidth / 2    , this.boardHeight / 2 - 1].state = BoardSpace.blue;
-            this.board[boardWidth / 2    , this.boardHeight / 2    ].state = BoardSpace.red;
+            //creates the first 4 tokens
+            this.board[boardWidth / 2 - 1, this.boardHeight / 2 - 1].state = BoardSpace.blue;
+            this.board[boardWidth / 2 - 1, this.boardHeight / 2    ].state = BoardSpace.red;
+            this.board[boardWidth / 2    , this.boardHeight / 2 - 1].state = BoardSpace.red;
+            this.board[boardWidth / 2    , this.boardHeight / 2    ].state = BoardSpace.blue;
 
-            this.turn = 0;
+
+            
+            //resets basic variables
+            this.score[0] = 2; this.score[1] = 2;
+            this.canUndo = false;
+            this.turn = 1;
             this.gameState = playerBlue;
             this.checkMoves();
-            boardInitialized = true;
+
             
+
+            //displays the new board
+            this.updateBoardSize();
+            boardInitialized = true;
             this.Invalidate();
+        }
+
+        //handles a player move
+        public void makeMove(object obj, EventArgs e)
+        {
+            BoardSpace clickedSpace = (BoardSpace)obj;
+            if (clickedSpace.LegalMove)
+            {
+                //updates score used to undo this move
+                this.lastScore[playerBlue] = this.score[playerBlue];
+                this.lastScore[playerRed] = this.score[playerRed];
+
+                //updates board
+                int dirX, dirY;
+                for (int k = 0; k < 8; k++)
+                    if (clickedSpace.legalDirection[k])
+                    {
+                        dirX = ReversiForm.directions[k, 0];
+                        dirY = ReversiForm.directions[k, 1];
+
+                        for (int x = clickedSpace.x + dirX, y = clickedSpace.y + dirY;
+                            ((x < boardWidth && x >= 0) && (y < boardHeight && y >= 0));
+                            x += dirX, y += dirY)
+                        {
+                            if (board[x, y].state == this.gameState)
+                                break;
+                            this.board[x, y].lastState = board[x, y].state;
+                            this.board[x, y].turnChanged = this.turn;
+                            this.board[x, y].state = this.gameState;
+                            this.score[gameState]++;
+                            this.score[1 - gameState]--;
+                        }
+                    }
+                clickedSpace.lastState = clickedSpace.state;
+                clickedSpace.turnChanged = this.turn;
+                this.turn++;
+                this.canUndo = true;
+                clickedSpace.state = this.gameState;
+                this.score[gameState]++;
+
+                this.gameState = 1 - this.gameState;
+                this.checkMoves();
+                this.Invalidate();
+            }
+
         }
 
         //calculates who is victorious
@@ -191,7 +247,10 @@ namespace ReversiGame
         //calculates which moves are legal
         private void checkMoves()
         {
+
             bool movesAvailable = false;
+
+            //calculates legal moves for active players
             for (int i = 0; i < boardWidth; i++)
             {
                 for (int j = 0; j < boardHeight; j++)
@@ -207,6 +266,8 @@ namespace ReversiGame
             }
             if (movesAvailable)
                 return;
+
+            //if no legal moves exist the turn goes to the other players
             this.gameState = 1 - this.gameState;
             for (int i = 0; i < boardWidth; i++)
             {
@@ -223,6 +284,8 @@ namespace ReversiGame
             }
             if (movesAvailable)
                 return;
+
+            //if still no legal moves exist the game ends
             this.calculateVictor();
         }
 
@@ -246,6 +309,7 @@ namespace ReversiGame
             return moveAble;
         }
 
+        //checks whether there is a legal moves onto a space from a given direction
         private bool checkDirection(int i, int j, int dirX, int dirY)
         {
             bool adjacentEnemy = false;
@@ -267,50 +331,48 @@ namespace ReversiGame
                 
             return false;
         }
-
-        //handles a player move
-        public void makeMove(object obj, EventArgs e)
-        {
-            BoardSpace clickedSpace = (BoardSpace)obj;
-            if (clickedSpace.LegalMove)
-            {
-                int dirX, dirY;
-                for (int k = 0; k < 8; k++)
-                    if (clickedSpace.legalDirection[k])
-                    {
-                        dirX = ReversiForm.directions[k, 0];
-                        dirY = ReversiForm.directions[k, 1];
-
-                        for (int x = clickedSpace.x + dirX, y = clickedSpace.y + dirY;
-                            ((x < boardWidth && x >= 0) && (y < boardHeight && y >= 0));
-                            x += dirX, y += dirY)
-                        {
-                            if (board[x, y].state == this.gameState)
-                                break;
-                            this.board[x, y].lastState =     board[x, y].state;
-                            this.board[x, y].turnChanged =   this.turn;
-                            this.board[x, y].state =         this.gameState;
-                            this.score[gameState]++;
-                            this.score[1 - gameState]--;
-                            this.board[x, y].updated = true;
-                        }
-                    }
-                clickedSpace.lastState = clickedSpace.state;
-                clickedSpace.turnChanged = this.turn++;
-                clickedSpace.state = this.gameState;
-                clickedSpace.updated = true;
-                this.score[gameState]++;
-
-                this.gameState = 1 - this.gameState;
-                this.checkMoves();
-                this.Invalidate(); 
-            }
-                              
-        }
-
+              
+        //starts a new game
         private void buttonNewGame_Click(object sender, EventArgs e)
         {
+            if (int.Parse(this.textBoxBoardHeight.Text) >= 2 && int.Parse(this.textBoxBoardWidth.Text) >= 2)
             this.newGame();
+        }
+
+        //undoes the last move
+        private void buttonUndo_Click(object sender, EventArgs e)
+        {
+            if (this.canUndo)
+            {
+                foreach (BoardSpace bs in board)
+                {
+
+
+                    if (bs.turnChanged == (this.turn - 1))
+                    {
+                        bs.state = bs.lastState;
+
+                    }
+
+
+                }
+                this.turn--;
+                this.gameState = 1 - this.gameState;
+                this.score[playerBlue] = this.lastScore[playerBlue];
+                this.score[playerRed] = this.lastScore[playerRed];
+                this.canUndo = false;
+                this.checkMoves();
+                this.Invalidate();
+            }
+
+            
+
+        }
+
+        //redraws the board when the help checkbox is changed 
+        private void checkBoxHelp_CheckedChanged(object sender, EventArgs e)
+        {
+            this.Invalidate();
         }
     }
 
